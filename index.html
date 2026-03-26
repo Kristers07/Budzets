@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="lv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Budzeta planotajs</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <div class="bg-shape bg-shape-one"></div>
+    <div class="bg-shape bg-shape-two"></div>
+
+    <main class="page">
+        <section class="hero">
+            <div class="hero-copy">
+                <p class="eyebrow">Gudra naudas kontrole</p>
+                <h1>Budzeta planotajs</h1>
+                <p class="lead">
+                    Pievieno ienakumus un izdevumus, seko bilancei un glaba visu CSV faila.
+                    Vienkarsi, skaisti un parskatami.
+                </p>
+            </div>
+
+            <div class="hero-card glass">
+                <p class="mini-label">Kopejais parskats</p>
+                <div class="hero-stats">
+                    <div>
+                        <span>Ienakumi</span>
+                        <strong class="positive">{{ visi.ienakumi | nauda }}</strong>
+                    </div>
+                    <div>
+                        <span>Izdevumi</span>
+                        <strong class="negative">{{ visi.izdevumi | nauda }}</strong>
+                    </div>
+                    <div>
+                        <span>Bilance</span>
+                        <strong>{{ visi.bilance | nauda }}</strong>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="layout">
+            <div class="panel glass">
+                <div class="panel-head">
+                    <h2>Pievienot ierakstu</h2>
+                    <span class="badge">Sodien: {{ sodien }}</span>
+                </div>
+
+                <form action="/pievienot" method="post" class="entry-form">
+                    <div class="form-grid">
+                        <label>
+                            Tips
+                            <select name="tips" required>
+                                <option value="Ienakums">Ienakums</option>
+                                <option value="Izdevums">Izdevums</option>
+                            </select>
+                        </label>
+
+                        <label>
+                            Summa
+                            <input type="text" name="summa" placeholder="Piemeram 125.50" required>
+                        </label>
+
+                        <label class="wide">
+                            Apraksts
+                            <input type="text" name="apraksts" placeholder="Alga, partika, ire, transports..." required>
+                        </label>
+
+                        <label>
+                            Datums
+                            <input type="date" name="datums" value="{{ sodien }}">
+                        </label>
+                    </div>
+
+                    <button type="submit" class="primary-btn">Pievienot ierakstu</button>
+                </form>
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        <div class="messages">
+                            {% for category, message in messages %}
+                                <div class="message {{ category }}">{{ message }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endwith %}
+            </div>
+
+            <div class="panel glass">
+                <div class="panel-head">
+                    <h2>Filtri un bilance</h2>
+                    <span class="badge dark">{{ dati|length }} ieraksti</span>
+                </div>
+
+                <form method="get" action="/" class="filter-form">
+                    <label>
+                        Tips
+                        <select name="tips">
+                            <option value="Visi" {% if tips == 'Visi' %}selected{% endif %}>Visi</option>
+                            <option value="Ienakums" {% if tips == 'Ienakums' %}selected{% endif %}>Ienakumi</option>
+                            <option value="Izdevums" {% if tips == 'Izdevums' %}selected{% endif %}>Izdevumi</option>
+                        </select>
+                    </label>
+
+                    <label>
+                        No datuma
+                        <input type="date" name="datums_no" value="{{ datums_no }}">
+                    </label>
+
+                    <label>
+                        Lidz datumam
+                        <input type="date" name="datums_lidz" value="{{ datums_lidz }}">
+                    </label>
+
+                    <div class="filter-actions">
+                        <button type="submit" class="primary-btn">Filtret</button>
+                        <a href="/" class="ghost-btn">Notirit</a>
+                    </div>
+                </form>
+
+                <div class="summary-grid">
+                    <article class="summary-card income">
+                        <span>Filtretie ienakumi</span>
+                        <strong>{{ kopsavilkums.ienakumi | nauda }}</strong>
+                    </article>
+                    <article class="summary-card expense">
+                        <span>Filtretie izdevumi</span>
+                        <strong>{{ kopsavilkums.izdevumi | nauda }}</strong>
+                    </article>
+                    <article class="summary-card balance">
+                        <span>Filtreta bilance</span>
+                        <strong>{{ kopsavilkums.bilance | nauda }}</strong>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section class="records-panel glass">
+            <div class="panel-head">
+                <h2>Ierakstu saraksts</h2>
+                <span class="subtle">Dati tiek saglabati faila `dati.csv`.</span>
+            </div>
+
+            {% if dati %}
+                <div class="records">
+                    {% for ier in dati %}
+                        <article class="record {{ 'income-line' if ier.tips == 'Ienakums' else 'expense-line' }}">
+                            <div class="record-main">
+                                <p class="record-tag">{{ ier.tips }}</p>
+                                <h3>{{ ier.apraksts }}</h3>
+                                <p class="record-date">{{ ier.datums }}</p>
+                            </div>
+
+                            <div class="record-side">
+                                <strong>{{ ier.summa | nauda }}</strong>
+                                <form method="post" action="/dzest/{{ ier.id }}">
+                                    <button type="submit" class="delete-btn">Dzest</button>
+                                </form>
+                            </div>
+                        </article>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty">
+                    <h3>Vel nav neviena ieraksta</h3>
+                    <p>Pievieno pirmo ienakumu vai izdevumu, un te viss paradisies automatiski.</p>
+                </div>
+            {% endif %}
+        </section>
+    </main>
+</body>
+</html>

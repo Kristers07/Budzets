@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="lv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Budzeta planotajs</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="page">
+        <header class="hero">
+            <div>
+                <p class="eyebrow">Projekts</p>
+                <h1>Budzeta planotajs</h1>
+                <p class="subtitle">Pievieno ienakumus un izdevumus, skaties bilanci un glaba datus CSV faila.</p>
+            </div>
+            <nav class="hero-nav">
+                <a class="button secondary" href="{{ url_for('index') }}">Sakums</a>
+                <a class="button" href="{{ url_for('bilance') }}">Bilances lapa</a>
+            </nav>
+        </header>
+
+        <section class="grid">
+            <article class="card">
+                <h2>Pievienot ierakstu</h2>
+                <form method="post" action="{{ url_for('pievienot') }}" class="entry-form">
+                    <label>
+                        Tips
+                        <select name="tips" required>
+                            <option value="Ienakums">Ienakums</option>
+                            <option value="Izdevums">Izdevums</option>
+                        </select>
+                    </label>
+
+                    <label>
+                        Summa
+                        <input type="text" name="summa" placeholder="Piemeram, 125.50" required>
+                    </label>
+
+                    <label>
+                        Apraksts
+                        <input type="text" name="apraksts" placeholder="Alga, ire, partika..." required>
+                    </label>
+
+                    <label>
+                        Datums
+                        <input type="date" name="datums">
+                    </label>
+
+                    <button type="submit">Saglabat ierakstu</button>
+                </form>
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        <div class="messages">
+                            {% for category, message in messages %}
+                                <div class="message {{ category }}">{{ message }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endwith %}
+            </article>
+
+            <article class="card">
+                <h2>Kopsavilkums</h2>
+                <div class="stats">
+                    <div class="stat positive">
+                        <span>Ienakumi</span>
+                        <strong>{{ visi_kopsavilkums.ienakumi | nauda }}</strong>
+                    </div>
+                    <div class="stat negative">
+                        <span>Izdevumi</span>
+                        <strong>{{ visi_kopsavilkums.izdevumi | nauda }}</strong>
+                    </div>
+                    <div class="stat neutral">
+                        <span>Kopeja bilance</span>
+                        <strong>{{ visi_kopsavilkums.bilance | nauda }}</strong>
+                    </div>
+                </div>
+
+                <h3>Filtretais skats</h3>
+                <form method="get" action="{{ url_for('index') }}" class="filter-form">
+                    <label>
+                        Tips
+                        <select name="tips">
+                            <option value="Visi" {% if filtrs == 'Visi' %}selected{% endif %}>Visi</option>
+                            <option value="Ienakums" {% if filtrs == 'Ienakums' %}selected{% endif %}>Ienakumi</option>
+                            <option value="Izdevums" {% if filtrs == 'Izdevums' %}selected{% endif %}>Izdevumi</option>
+                        </select>
+                    </label>
+
+                    <label>
+                        No datuma
+                        <input type="date" name="datums_no" value="{{ datums_no }}">
+                    </label>
+
+                    <label>
+                        Lidz datumam
+                        <input type="date" name="datums_lidz" value="{{ datums_lidz }}">
+                    </label>
+
+                    <div class="filter-actions">
+                        <button type="submit">Filtret</button>
+                        <a class="button secondary" href="{{ url_for('index') }}">Notirit</a>
+                    </div>
+                </form>
+
+                <div class="mini-summary">
+                    <p>Skata ienakumi: <strong>{{ kopsavilkums.ienakumi | nauda }}</strong></p>
+                    <p>Skata izdevumi: <strong>{{ kopsavilkums.izdevumi | nauda }}</strong></p>
+                    <p>Skata bilance: <strong>{{ kopsavilkums.bilance | nauda }}</strong></p>
+                </div>
+            </article>
+        </section>
+
+        <section class="card">
+            <div class="section-title">
+                <h2>Ierakstu saraksts</h2>
+                <span>{{ dati|length }} ieraksti</span>
+            </div>
+
+            {% if dati %}
+                <div class="records">
+                    {% for ier in dati %}
+                        <article class="record {{ 'income' if ier.tips == 'Ienakums' else 'expense' }}">
+                            <div>
+                                <p class="record-type">{{ ier.tips }}</p>
+                                <h3>{{ ier.apraksts }}</h3>
+                                <p class="record-date">{{ ier.datums }}</p>
+                            </div>
+                            <div class="record-side">
+                                <strong>{{ ier.summa | nauda }}</strong>
+                                <form method="post" action="{{ url_for('dzest', ieraksta_id=ier.id) }}">
+                                    <button class="danger" type="submit">Dzest</button>
+                                </form>
+                            </div>
+                        </article>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="empty-state">Vel nav neviena ieraksta. Pievieno pirmo ienakumu vai izdevumu.</p>
+            {% endif %}
+        </section>
+    </div>
+</body>
+</html>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="lv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bilance</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="page compact">
+        <header class="hero small">
+            <div>
+                <p class="eyebrow">Atskaite</p>
+                <h1>Bilances parskats</h1>
+                <p class="subtitle">Atseviska lapa galvenajiem budzeta raditajiem.</p>
+            </div>
+            <a class="button" href="{{ url_for('index') }}">Atpakal uz sakumu</a>
+        </header>
+
+        <section class="card">
+            <div class="stats single-page">
+                <div class="stat positive">
+                    <span>Ienakumi</span>
+                    <strong>{{ kopsavilkums.ienakumi | nauda }}</strong>
+                </div>
+                <div class="stat negative">
+                    <span>Izdevumi</span>
+                    <strong>{{ kopsavilkums.izdevumi | nauda }}</strong>
+                </div>
+                <div class="stat neutral">
+                    <span>Bilance</span>
+                    <strong>{{ kopsavilkums.bilance | nauda }}</strong>
+                </div>
+            </div>
+        </section>
+    </div>
+</body>
+</html>
