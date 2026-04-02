@@ -170,6 +170,11 @@ button:hover,
     margin-bottom: 8px;
 }
 
+.stat.positive span,
+.stat.negative span {
+    color: #000;
+}
+
 .stat strong {
     font-size: 1.4rem;
 }

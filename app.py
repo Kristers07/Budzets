@@ -9,12 +9,14 @@ from flask import Flask, flash, redirect, render_template, request, send_from_di
 app = Flask(__name__, template_folder=".")
 app.secret_key = "budzets-secret-key"
 
+# CSV fails, kur tiek glabāti visi budžeta ieraksti.
 DATA_FILE = Path("dati.csv")
 IERAKSTU_TIPI = ("Ienakums", "Izdevums")
 dati: list[dict] = []
 
 
 def ieladet_datus() -> None:
+    # Ielādē ierakstus no CSV faila programmas palaišanas brīdī.
     dati.clear()
     if not DATA_FILE.exists():
         return
@@ -36,6 +38,7 @@ def ieladet_datus() -> None:
 
 
 def saglabat_datus() -> None:
+    # Saglabā pašreizējos ierakstus atpakaļ CSV failā.
     with DATA_FILE.open("w", newline="", encoding="utf-8") as fails:
         lauki = ["tips", "summa", "apraksts", "datums"]
         rakstitajs = csv.DictWriter(fails, fieldnames=lauki)
@@ -44,6 +47,7 @@ def saglabat_datus() -> None:
 
 
 def kopsavilkums(ieraksti: list[dict]) -> dict:
+    # Aprēķina kopējos ienākumus, izdevumus un bilanci izvēlētajiem ierakstiem.
     ienakumi = sum(ier["summa"] for ier in ieraksti if ier["tips"] == "Ienakums")
     izdevumi = sum(ier["summa"] for ier in ieraksti if ier["tips"] == "Izdevums")
     return {
@@ -54,6 +58,7 @@ def kopsavilkums(ieraksti: list[dict]) -> dict:
 
 
 def filtreti_ieraksti(tips: str, datums_no: str, datums_lidz: str) -> list[dict]:
+    # Atlasa ierakstus pēc tipa un datuma intervāla, un pievieno ID dzēšanai.
     atlasitie = list(enumerate(dati))
 
     if tips in IERAKSTU_TIPI:
@@ -71,6 +76,7 @@ def filtreti_ieraksti(tips: str, datums_no: str, datums_lidz: str) -> list[dict]
 
 @app.template_filter("nauda")
 def nauda(summa: float) -> str:
+    # Pārvērš skaitli ērtā naudas formātā attēlošanai lapā.
     return f"{summa:.2f} EUR"
 
 
@@ -81,6 +87,7 @@ def stils():
 
 @app.route("/")
 def index():
+    # Parāda galveno lapu ar filtriem, ierakstiem un kopsavilkumu.
     tips = request.args.get("tips", "Visi")
     datums_no = request.args.get("datums_no", "")
     datums_lidz = request.args.get("datums_lidz", "")
@@ -102,6 +109,7 @@ def index():
 
 @app.route("/pievienot", methods=["POST"])
 def pievienot():
+    # Nolasa formas datus, pārbauda tos un pievieno jaunu ierakstu.
     tips = request.form.get("tips", "").strip()
     summa_teksts = request.form.get("summa", "").replace(",", ".").strip()
     apraksts = request.form.get("apraksts", "").strip()
@@ -143,6 +151,7 @@ def pievienot():
 
 @app.route("/dzest/<int:ieraksta_id>", methods=["POST"])
 def dzest(ieraksta_id: int):
+    # Izdzēš ierakstu pēc tā saraksta indeksa.
     if 0 <= ieraksta_id < len(dati):
         dati.pop(ieraksta_id)
         saglabat_datus()
@@ -151,7 +160,7 @@ def dzest(ieraksta_id: int):
         flash("Ieraksts nav atrasts.", "error")
     return redirect(url_for("index"))
 
-
+# Ielādē datus uzreiz, lai tie būtu pieejami pirms pirmā pieprasījuma.
 ieladet_datus()
 
 if __name__ == "__main__":
